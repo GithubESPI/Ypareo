@@ -1,15 +1,12 @@
-import Footer from "./components/Footer"
-import Navbar from "./components/Navbar"
-import Upload from "./components/Upload"
+import Header from "./components/shared/Header"
+import UploadBulletin from "./components/shared/UploadBulletin"
+
 
 const App = () => {
   return (
-    <div className="flex h-screen flex-col">
-     <Navbar />
-     <main className="flex-1">
-      <Upload />
-     </main>
-     <Footer />
+    <div>
+      <Header />
+      <UploadBulletin />
     </div>
   )
 }
