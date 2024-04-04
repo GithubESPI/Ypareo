@@ -1,10 +1,12 @@
 import Header from '@/components/shared/Header';
 import React from 'react';
 
-const RootLayout = () => {
+
+const RootLayout = ({ children }) => {
   return (
     <div>
       <Header />
+      {children}
     </div>
   );
 };

@@ -4,7 +4,7 @@ export const headerLinks = [
       route: "/viewBulletins",
     },
     {
-        label: "Mon Profile",
+        label: "Profile",
         route: "/profile",
     },
 ];
