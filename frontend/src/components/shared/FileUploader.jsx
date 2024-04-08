@@ -8,44 +8,29 @@ import { useToast } from "@/components/ui/use-toast"
 
 
 const FileUploader = () => {
-  const [data, setData] = useState([]);
-  const [isDataUploaded, setIsDataUploaded] = useState(false);
-  const { toast } = useToast()
+  const [file, setFile] = useState('');
 
-  const handleFileUpload = (e) => {
-    const reader = new FileReader();
-    reader.readAsArrayBuffer(e.target.files[0]);
-    reader.onload = (e) => {
-      const data = e.target.result;
-      const workbook = XLSX.read(data, {type: "binary"});
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const parsedData = XLSX.utils.sheet_to_json(sheet);
-      setData(parsedData);
-      setIsDataUploaded(true);
-      console.log("Les données Excel ont été récupérées avec succès :", parsedData);
-    }
-  }
+  const handleFileChange = (event) => {
+    setFile(event.target.files[0]);
+  };
 
-  const convertExcelToBulletin = async () => {
+  const handleUpload = async () => {
+    const formData = new FormData();
+    formData.append('file', file);
+
     try {
-      const response = await axios.post('http://localhost:5000/convert-excel', { data: data }, {
+      const response = await axios.post('http://localhost:8000/upload-excel/', formData, {
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'multipart/form-data',
+        },
       });
-      console.log(response.data); // Affiche la réponse du backend
-      toast({
-        description: "Conversion réussi",
-      })
+      alert('Fichier uploadé et converti avec succès');
     } catch (error) {
-      toast({
-        description: "échec de la conversion",
-      })
+      console.error('Erreur lors de l\'upload du fichier : ', error);
+      alert('Erreur lors de l\'upload du fichier');
     }
   };
   
-
   return (
     <div>
       <div className="flex flex-center flex-col bg-dark rounded-xl cursor-pointer bg-grey-50">
@@ -55,18 +40,16 @@ const FileUploader = () => {
             Mettre le document ici
           </h3>
           <p className="p-medium-12 mb-4">Excel</p>
-          <Input type="file" accept=".xlsx, .xls" className="shad-button_dark_4 cursor-pointer" onChange={handleFileUpload} />
+          <Input type="file" accept=".xlsx, .xls" className="shad-button_dark_4 cursor-pointer" onChange={handleFileChange} />
         </div>
       </div>
 
       <div>
-        {isDataUploaded && (
-          <div className="flex justify-center mt-4">
-            <Button className="shad-button_dark_4" onClick={convertExcelToBulletin}>
-              Convertir l'excel en bulletin
-            </Button>
-          </div>
-        )}
+        <div className="flex justify-center mt-4">
+          <Button className="shad-button_dark_4" onClick={handleUpload}>
+            Convertir l'excel en bulletin
+          </Button>
+        </div>
       </div>
     </div>
   )

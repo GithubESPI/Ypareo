@@ -214,9 +214,7 @@ body {
   .file_uploader-box {
     @apply flex-center flex-col p-7 h-80 lg:h-[350px];
   }
-
-
-    
+ 
 }
 
 @layer components{
