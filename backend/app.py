@@ -1,37 +1,77 @@
-from flask import Flask, request, jsonify, render_template
+from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
-from flask_cors import CORS
-from flask_cors import cross_origin
+from docx import Document
+import os
 
-app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
+app = FastAPI()
 
-@app.route('/convert-excel', methods=['GET', 'POST'])
-@cross_origin(origin='http://localhost:5173', headers=['Content-Type', 'Authorization'])
-def convert_excel_to_bulletin():
-    if request.method == 'POST':
-        if request.is_json:
-            data = request.json.get('data')
-            df = pd.DataFrame(data)
-            print("Données Excel reçues :\n", df)
-            # Votre logique de traitement des données ici
+# Configuration de CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-            # Convertir les données en un format utilisable dans le template HTML
-            bulletin_data = []
-            for index, row in df.iterrows():
-                bulletin_data.append({
-                    'enseignement': row['Enseignements'],
-                    'moyenne': row['Moyenne'],
-                    'total_ects': row['Total ECTS'],
-                    'etat': row['Etat']
-                })
+# Assurez-vous que les dossiers existent
+os.makedirs("uploads", exist_ok=True)
+os.makedirs("bulletins/M1_S1", exist_ok=True)
 
-            # Renvoyer le template HTML avec les données
-            return render_template('bulletin_template.html', data=bulletin_data)
-        else:
-            return jsonify({"error": "La requête ne contient pas de données JSON"}), 400
-    elif request.method == 'GET':
-        return jsonify({"message": "Endpoint pour la conversion Excel en bulletin"})
+@app.post("/upload-excel/")
+async def upload_excel(file: UploadFile = File(...)):
+    try:
+        file_location = f"uploads/{file.filename}"
+        with open(file_location, "wb+") as file_object:
+            file_object.write(file.file.read())
+        
+        # Appel de la fonction de traitement du fichier Excel
+        bulletin_paths = process_excel_file(file_location)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+        # Retour d'une réponse de succès avec les chemins des bulletins générés
+        return {"filenames": bulletin_paths}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erreur de traitement du fichier: {e}")
+
+def process_excel_file(file_path: str):
+    df = pd.read_excel(file_path, header=4)
+    bulletin_paths = []
+    for index, row in df.iterrows():
+        bulletin_path = generate_word_document(row)
+        bulletin_paths.append(bulletin_path)
+    return bulletin_paths
+
+def replace_paragraph_text(paragraph, text):
+    """Remplace le texte d'un paragraphe tout en conservant la mise en forme."""
+    if paragraph.text:
+        p_element = paragraph._element
+        p_element.clear_content()
+        p_element.add_run(text)
+
+def generate_word_document(data):
+    template_path = "bulletins/M1_S1/modele_bulletin_M1_S1.docx"
+    document = Document(template_path)
+    
+    for paragraph in document.paragraphs:
+        if "{{nom_apprenant}}" in paragraph.text:
+            replace_paragraph_text(paragraph, paragraph.text.replace("{{nom_apprenant}}", data.get("Nom", "Inconnu")))
+        # Ajoutez ici des conditions supplémentaires pour d'autres placeholders
+
+    bulletin_filename = f"bulletins/M1_S1/{data.get('Nom', 'Inconnu').replace(' ', '_')}_bulletin.docx"
+    document.save(bulletin_filename)
+    
+    return bulletin_filename
+
+@app.get("/download-bulletin/{student_name}")
+async def download_bulletin(student_name: str):
+    file_path = f"bulletins/M1_S1/{student_name}_bulletin.docx"
+    if os.path.exists(file_path):
+        return FileResponse(path=file_path, filename=f"{student_name}_bulletin.docx")
+    else:
+        raise HTTPException(status_code=404, detail="Bulletin non trouvé")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
