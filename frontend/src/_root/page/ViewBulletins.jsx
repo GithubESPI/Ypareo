@@ -1,5 +1,3 @@
-import React from 'react'
-
 const ViewBulletins = () => {
   return (
     <>
@@ -9,7 +7,7 @@ const ViewBulletins = () => {
         </h3>
       </section>
     </>
-  )
-}
+  );
+};
 
-export default ViewBulletins
+export default ViewBulletins;

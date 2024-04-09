@@ -1,7 +1,6 @@
-import React from 'react';
 import logo from "/assets/img/header/logo.png";
-import MobileNav from './MobileNav';
-import NavItems from './NavItems';
+import MobileNav from "./MobileNav";
+import NavItems from "./NavItems";
 
 const Header = () => {
   return (

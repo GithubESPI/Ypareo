@@ -1,6 +1,4 @@
-import Header from '@/components/shared/Header';
-import React from 'react';
-
+import Header from "@/components/shared/Header";
 
 const RootLayout = ({ children }) => {
   return (
