@@ -1,5 +1,8 @@
-# main.py
-from app.api import app  # Notice the 'app.' prefix now
+from dotenv import load_dotenv
+
+load_dotenv()  # Prend les variables d'environnement à partir du fichier .env
+
+from app.api import app
 
 if __name__ == "__main__":
     import uvicorn
