@@ -73,7 +73,7 @@ def extract_grades_and_coefficients(grade_str):
         grade = grade.strip()
         coefficient = coefficient.strip()
         # Debugging print pour vérifier la conversion
-        print(f"Traitement de la part: '{part}', grade converti: '{grade}', coefficient converti: '{coefficient}'")
+        # print(f"Traitement de la part: '{part}', grade converti: '{grade}', coefficient converti: '{coefficient}'")
         grades_coefficients.append((float(grade), float(coefficient)))
     return grades_coefficients
 
@@ -262,10 +262,21 @@ def process_excel_file(file_path: str, template_path: str, output_dir: str) -> l
         df_students = pd.read_excel(file_path, header=4)
         
         bulletin_paths = []
+
+        # Les positions des colonnes ECTS dans le fichier Excel, en assumant que la première colonne est indexée à 0
+        ects_columns = [
+            3, 15, 21, 30, 51,  # Indices pour D6, P6, V6, AE6, AZ6 (ECTSUE1 à ECTSUE5)
+            6, 9, 12, 18, 24,   # Indices pour G6, J6, M6, S6, Y6
+            27, 33, 36, 39,     # Indices pour AB6, AH6, AK6, AN6
+            42, 48,             # Indices pour AQ6, AW6
+            45, 54, 57, 60      # Indices pour AT6, BC6, BF6, BI6
+        ]
+
         # Iterate over each student in the DataFrame
         for index, student_data in df_students.iterrows():
             # Call the document generation function for the current student
-            bulletin_path = generate_word_document(student_data, titles_row, template_path, output_dir)
+            ects_values = [student_data.iloc[col] for col in ects_columns]  # Utilisez iloc pour accéder par indice de colonne
+            bulletin_path = generate_word_document(student_data, ects_values, titles_row, template_path, output_dir)
             bulletin_paths.append(bulletin_path)
 
         return bulletin_paths
@@ -273,8 +284,8 @@ def process_excel_file(file_path: str, template_path: str, output_dir: str) -> l
         raise HTTPException(status_code=400, detail=f"Error processing Excel file: {e}")
 
 
-def generate_word_document(student_data, titles_row, template_path, output_dir):
-    doc = DocxTemplate(template_path)
+def generate_word_document(student_data, ects_values, titles_row, template_path, output_dir):
+    ects_values_as_int = [int(value) if pd.notna(value) else "NaN" for value in ects_values] 
     
     # Preparing the data for the placeholders
     placeholders = {
@@ -306,8 +317,24 @@ def generate_word_document(student_data, titles_row, template_path, output_dir):
         "fonciere": titles_row[53],
         "montage": titles_row[56],
         "acquisition": titles_row[59],
-        # "datedujour": datetime.now().strftime("%d/%m/%Y"),
-        # Add all the other placeholders as needed...
+        # ECTS
+        # Ajout des placeholders pour les ECTS
+        "ECTSUE1": ects_values_as_int[0],
+        "ECTSUE2": ects_values_as_int[1],
+        "ECTSUE3": ects_values_as_int[2],
+        "ECTSUE4": ects_values_as_int[3],
+        "ECTSUE5": ects_values_as_int[4],
+        "ECTS1": ects_values_as_int[5],
+        "ECTS2": ects_values_as_int[6],
+        "ECTS3": ects_values_as_int[7],
+        "ECTS4": ects_values_as_int[8],
+        "ECTS5": ects_values_as_int[9],
+        "ECTS6": ects_values_as_int[10],
+        "ECTS7": ects_values_as_int[11],
+        "ECTS8": ects_values_as_int[16],
+        "ECTS9": ects_values_as_int[17],
+        "ECTS10": ects_values_as_int[18],
+        "ECTS11": ects_values_as_int[19],
     }
 
     all_grades_with_coefficients = []  # Pour calculer la moyenne générale à la fin
