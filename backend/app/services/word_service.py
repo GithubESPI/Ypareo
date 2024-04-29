@@ -50,25 +50,26 @@ def generate_word_document(student_data, ects_values, titles_row, template_path,
         "injustifiee": student_data["ABS injustifiées"],
         "retard": student_data["Retards"],
         "UE1_Title": titles_row[2],
-        "strat": titles_row[5],
-        "finance": titles_row[8],
-        "economie": titles_row[11],
+        "matiere1": titles_row[5],
+        "matiere2": titles_row[8],
+        "matiere3": titles_row[11],
         "UE2_Title": titles_row[14],
-        "droit": titles_row[17],
+        "matiere4": titles_row[17],
         "UE3_Title": titles_row[20],
-        "ville": titles_row[23],
-        "politique": titles_row[26],
+        "matiere5": titles_row[23],
+        "matiere6": titles_row[26],
         "UE4_Title": titles_row[29],
-        "real": titles_row[32],
-        "rencontre": titles_row[35],
-        "career": titles_row[38],
-        "inside": titles_row[41],
-        "immersion": titles_row[44],
-        "voltaire": titles_row[47],
+        "matiere7": titles_row[32],
+        "matiere8": titles_row[35],
+        "matiere9": titles_row[38],
+        "matiere10": titles_row[41],
+        "matiere11": titles_row[44],
+        "matiere12": titles_row[47],
         "UESPE_Title": titles_row[50],
-        "fonciere": titles_row[53],
-        "montage": titles_row[56],
-        "acquisition": titles_row[59],
+        "matiere13": titles_row[53],
+        "matiere14": titles_row[56],
+        "matiere15": titles_row[59],
+        "datedujour": current_date,   # Add the current date
         # ECTS
         # Ajout des placeholders pour les ECTS
         "ECTSUE1": ects_values_as_int[0],
@@ -87,8 +88,10 @@ def generate_word_document(student_data, ects_values, titles_row, template_path,
         "ECTS9": ects_values_as_int[17],
         "ECTS10": ects_values_as_int[18],
         "ECTS11": ects_values_as_int[19],
-        "datedujour": current_date,  # Add the current date
+        # moyenne UE
+        # "moyUE1": f"{moy_ue1:.2f}",
     }
+
 
     all_grades_with_coefficients = []  # Pour calculer la moyenne générale à la fin
     grade_column_indices = [5, 8, 11, 17, 23, 26, 32, 35, 38, 41, 44, 47, 53, 56, 59]  # Assurez-vous que ces indices correspondent
