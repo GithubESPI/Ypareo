@@ -105,20 +105,21 @@ def generate_word_document(student_data, titles_row, template_path, output_dir):
             placeholders[f"note{i}"] = ""
             placeholders[f"ECTS{i}"] = 0
 
-    # Calculate totals and averages for each UE and overall ECTS
     for ue, indices in ects_sum_indices.items():
-        sum_values = sum(float(placeholders[f"note{index}"]) * placeholders[f"ECTS{index}"] for index in indices if placeholders[f"note{index}"] != "")
+        sum_values = sum(float(placeholders[f"note{index}"]) for index in indices if placeholders[f"note{index}"] != "")
         sum_ects = sum(placeholders[f"ECTS{index}"] for index in indices)
-        placeholders[f"moy{ue}"] = round(sum_values / sum_ects, 2) if sum_ects > 0 else 0
+        count_valid_notes = sum(1 for index in indices if placeholders[f"note{index}"] != "")
+        average_ue = round(sum_values / count_valid_notes, 2) if count_valid_notes > 0 else 0
+        placeholders[f"moy{ue}"] = average_ue
         placeholders[f"ECTS{ue}"] = sum_ects
         total_ects += sum_ects
 
-    placeholders["moyenneECTS"] = total_ects  # Assign total ECTS to the placeholder
+    placeholders["moyenneECTS"] = total_ects
 
-    # Calculate the general average
     total_notes = sum(placeholders[f"moy{ue}"] * placeholders[f"ECTS{ue}"] for ue in ects_sum_indices)
     total_ects = sum(placeholders[f"ECTS{ue}"] for ue in ects_sum_indices)
     placeholders["moyenne"] = round(total_notes / total_ects, 2) if total_ects else 0
+
 
     
     doc = DocxTemplate(template_path)
