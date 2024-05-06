@@ -88,14 +88,7 @@ def generate_word_document(student_data, titles_row, template_path, output_dir):
         'UE5': [13, 14, 15]
     }
 
-    ects_sum_indices = {
-        'UE1': [1, 2, 3],
-        'UE2': [4],
-        'UE3': [5, 6],
-        'UE4': [7, 8, 9, 10, 11, 12],
-        'UE5': [13, 14, 15]
-    }
-
+    
     # Initialize placeholders for ECTS and averages
     for ue in ects_sum_indices:
         placeholders[f"moy{ue}"] = 0
