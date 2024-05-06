@@ -81,12 +81,25 @@ def generate_word_document(student_data, titles_row, template_path, output_dir):
 
     grade_column_indices = [5, 8, 11, 17, 23, 26, 32, 35, 38, 41, 44, 47, 53, 56, 59]
     ects_sum_indices = {
-        'ECTSUE1': [1, 2, 3],
-        'ECTSUE2': [4],
-        'ECTSUE3': [5, 6],
-        'ECTSUE4': [7, 11],
-        'ECTSUE5': [13, 14, 15]
+        'UE1': [1, 2, 3],
+        'UE2': [4],
+        'UE3': [5, 6],
+        'UE4': [7, 8, 9, 10, 11, 12],
+        'UE5': [13, 14, 15]
     }
+
+    ects_sum_indices = {
+        'UE1': [1, 2, 3],
+        'UE2': [4],
+        'UE3': [5, 6],
+        'UE4': [7, 8, 9, 10, 11, 12],
+        'UE5': [13, 14, 15]
+    }
+
+    # Initialize placeholders for ECTS and averages
+    for ue in ects_sum_indices:
+        placeholders[f"moy{ue}"] = 0
+        placeholders[f"ECTS{ue}"] = 0
 
     for i, col_index in enumerate(grade_column_indices, start=1):
         grade_str = str(student_data.iat[col_index]).strip() if pd.notna(student_data.iat[col_index]) else ""
@@ -95,7 +108,7 @@ def generate_word_document(student_data, titles_row, template_path, output_dir):
             individual_average = calculate_weighted_average([g[0] for g in grades_coefficients], [g[1] for g in grades_coefficients])
             placeholders[f"note{i}"] = f"{individual_average:.2f}" if individual_average else ""
             if individual_average >= 8 and is_relevant_group:
-                ects_value = int(ects_config.get(f"ECTS{i}", 0))  # Assurez-vous que c'est un entier
+                ects_value = int(ects_config.get(f"ECTS{i}", 0))
                 placeholders[f"ECTS{i}"] = ects_value
             else:
                 placeholders[f"ECTS{i}"] = 0
@@ -103,15 +116,19 @@ def generate_word_document(student_data, titles_row, template_path, output_dir):
             placeholders[f"note{i}"] = ""
             placeholders[f"ECTS{i}"] = 0
 
-    # Calcul des ECTS par UE
+    # Calculate averages and total ECTS for each UE
     for ue, indices in ects_sum_indices.items():
-        sum_ects = sum(int(placeholders.get(f"ECTS{i}", 0)) for i in indices)  # Conversion en entier
-        placeholders[ue] = sum_ects
-    
-    # Calcul de la moyenne totale des ECTS
-    total_ects = sum(placeholders[ue] for ue in ects_sum_indices.keys())
-    placeholders['moyenneECTS'] = total_ects
+        sum_values = sum(float(placeholders[f"note{index}"]) * placeholders[f"ECTS{index}"] for index in indices if placeholders[f"note{index}"] != "")
+        sum_ects = sum(placeholders[f"ECTS{index}"] for index in indices)
+        placeholders[f"moy{ue}"] = round(sum_values / sum_ects, 2) if sum_ects > 0 else 0  # Rounded to two decimal places
+        placeholders[f"ECTS{ue}"] = sum_ects
 
+    # Calculate the general average
+    total_notes = sum(placeholders[f"moy{ue}"] * placeholders[f"ECTS{ue}"] for ue in ects_sum_indices)
+    total_ects = sum(placeholders[f"ECTS{ue}"] for ue in ects_sum_indices)
+    placeholders["moyenne"] = round(total_notes / total_ects, 2) if total_ects else 0  # Rounded to two decimal places
+
+    
     doc = DocxTemplate(template_path)
     doc.render(placeholders)
     output_filename = f"{student_data['Nom']}_bulletin.docx"
