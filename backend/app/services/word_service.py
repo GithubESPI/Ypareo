@@ -84,15 +84,11 @@ def generate_word_document(student_data, titles_row, template_path, output_dir):
         'UE1': [1, 2, 3],
         'UE2': [4],
         'UE3': [5, 6],
-        'UE4': [7, 8, 9, 10, 11, 12],
+        'UE4': [7, 11],
         'UE5': [13, 14, 15]
     }
 
-    
-    # Initialize placeholders for ECTS and averages
-    for ue in ects_sum_indices:
-        placeholders[f"moy{ue}"] = 0
-        placeholders[f"ECTS{ue}"] = 0
+    total_ects = 0  # Initialize total ECTS
 
     for i, col_index in enumerate(grade_column_indices, start=1):
         grade_str = str(student_data.iat[col_index]).strip() if pd.notna(student_data.iat[col_index]) else ""
@@ -109,17 +105,20 @@ def generate_word_document(student_data, titles_row, template_path, output_dir):
             placeholders[f"note{i}"] = ""
             placeholders[f"ECTS{i}"] = 0
 
-    # Calculate averages and total ECTS for each UE
+    # Calculate totals and averages for each UE and overall ECTS
     for ue, indices in ects_sum_indices.items():
         sum_values = sum(float(placeholders[f"note{index}"]) * placeholders[f"ECTS{index}"] for index in indices if placeholders[f"note{index}"] != "")
         sum_ects = sum(placeholders[f"ECTS{index}"] for index in indices)
-        placeholders[f"moy{ue}"] = round(sum_values / sum_ects, 2) if sum_ects > 0 else 0  # Rounded to two decimal places
+        placeholders[f"moy{ue}"] = round(sum_values / sum_ects, 2) if sum_ects > 0 else 0
         placeholders[f"ECTS{ue}"] = sum_ects
+        total_ects += sum_ects
+
+    placeholders["moyenneECTS"] = total_ects  # Assign total ECTS to the placeholder
 
     # Calculate the general average
     total_notes = sum(placeholders[f"moy{ue}"] * placeholders[f"ECTS{ue}"] for ue in ects_sum_indices)
     total_ects = sum(placeholders[f"ECTS{ue}"] for ue in ects_sum_indices)
-    placeholders["moyenne"] = round(total_notes / total_ects, 2) if total_ects else 0  # Rounded to two decimal places
+    placeholders["moyenne"] = round(total_notes / total_ects, 2) if total_ects else 0
 
     
     doc = DocxTemplate(template_path)
